@@ -23,7 +23,7 @@ RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH3TAnMJ6yUSPwcfVtSXjglaJ6DBgPdapB
 # Step 6: Tune SSH server configuration rules
 RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
     sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
-    echo "Port 22" >> /etc/ssh/sshd_config
+    echo "Port 8022" >> /etc/ssh/sshd_config
 
 # Step 7: Create a basic landing page for Render's active uptime checks
 RUN echo "<html><body><h1>Render Health Check Bypass Active</h1></body></html>" > /var/www/html/index.html
