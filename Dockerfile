@@ -39,7 +39,7 @@ CMD httpd -p 10000 -h /var/www/html && \
     while true; do \
       ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ServerAliveInterval=30 \
           -N \
-          -R alpine-render:22:localhost:22 \
+          -R alpine-render:8022:localhost:8022 \
           choco@ssh-j.com; \
       sleep 5; \
     done
