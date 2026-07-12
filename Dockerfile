@@ -1,13 +1,14 @@
-FROM alpine:latest
+FROM cachyos/cachyos:latest
 
 # =========================================================================
 # STEP 1: FORCE THE HOSTNAME OVERRIDE
-# This changes your prompt from "srv-d99v7qks728c73duq9r0..." to "apex-core"
+# This changes your prompt to "apex-core"
 # =========================================================================
 ENV HOSTNAME=apex-core
 
-# Step 2: Install OpenSSH tools and busybox-extras for the native tiny HTTP server
-RUN apk add --no-cache openssh-server openssh-client busybox-extras
+# Step 2: Install OpenSSH, Python 3, and build tools (base-devel, cmake) for zero-error bot compilation
+RUN pacman -Syu --noconfirm openssh python python-pip base-devel cmake ninja git && \
+    pacman -Scc --noconfirm
 
 # Step 3: Set root login credentials (usr: root / pass: root)
 RUN echo "root:root" | chpasswd
@@ -26,20 +27,18 @@ RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
     echo "Port 8022" >> /etc/ssh/sshd_config
 
 # Step 7: Create a basic landing page for Render's active uptime checks
-RUN echo "<html><body><h1>Render Health Check Bypass Active</h1></body></html>" > /var/www/html/index.html
+RUN echo "<html><body><h1>Render Health Check Bypass Active (CachyOS)</h1></body></html>" > /var/www/html/index.html
 
-
-# Expose 9999 for Render to listen to, and 8022 for internal use
+# Expose 10000 for Render to listen to, and 8022 for internal use
 EXPOSE 8022 10000
 
-# Step 7: Boot HTTP server locally, spin up sshd, and hold the solo SSH reverse tunnel open
-# Notice: Only one -R flag is used here now since Render handles the web layer entirely locally.
-CMD httpd -p 10000 -h /var/www/html && \
-    /usr/sbin/sshd && \
+# Step 8: Boot Python web server in background, spin up sshd, and hold the reverse tunnel open
+CMD python3 -m http.server 10000 --directory /var/www/html > /dev/null 2>&1 & \
+    /usr/bin/sshd && \
     while true; do \
       ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ServerAliveInterval=30 \
           -N \
-          -R alpine-render:22:localhost:8022 \
+          -R cachy-render:22:localhost:8022 \
           choco@ssh-j.com; \
       sleep 5; \
     done
